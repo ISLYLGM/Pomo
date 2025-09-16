@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF8E7"
+    android:padding="16dp">
+
+    <!-- Retângulo superior com título -->
+    <TextView
+        android:id="@+id/tvTitulo"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#D52D2D"
+        android:text="Bloco de Notas"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"
+        android:padding="8dp"
+        android:fontFamily="sans-serif-medium"/>
+
+    <!-- Caixa de texto para nova nota -->
+    <EditText
+        android:id="@+id/edtNovaNota"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Escreva seu pedido aqui..."
+        android:background="@drawable/edittext_border"
+        android:padding="12dp"
+        android:layout_marginBottom="12dp"/>
+
+
+    <!-- Botão de adicionar nota -->
+    <Button
+        android:id="@+id/btnAdicionar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Adicionar"
+        android:background="#228B22"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- RecyclerView para exibir notas -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvNotas"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+</LinearLayout>
+
+
