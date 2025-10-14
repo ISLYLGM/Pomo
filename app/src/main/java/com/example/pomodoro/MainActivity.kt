@@ -19,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,37 +31,34 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import androidx.compose.ui.text.font.FontWeight
-
+import com.example.pomodoro.data.AppDatabase
+import com.example.pomodoro.data.Note
+import com.example.pomodoro.data.NoteDao
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Configura a janela (cor e transparência)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = 0xFF87CEFA.toInt() // azul pastel
         window.navigationBarColor = 0xFF87CEFA.toInt()
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.setSystemBarsAppearance(
+            window.decorView?.windowInsetsController?.setSystemBarsAppearance(
                 0,
                 WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
             )
         }
 
-        setContent {
-            PomodoroApp()
-        }
+        setContent { PomodoroApp() }
     }
 }
 
+/* ---------------- APP NAV ---------------- */
 @Composable
 fun PomodoroApp() {
     val navController = rememberNavController()
-
     Scaffold { padding ->
         NavHost(
             navController = navController,
@@ -73,6 +72,7 @@ fun PomodoroApp() {
         }
     }
 }
+
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
@@ -90,12 +90,11 @@ fun HomeScreen(navController: NavHostController) {
                 .padding(top = 100.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔴 Card salmão atrás do texto
             Box(
                 modifier = Modifier
                     .wrapContentWidth()
                     .background(
-                        color = Color(0xFFFFA07A), // salmão
+                        color = Color(0xFFFFA07A),
                         shape = MaterialTheme.shapes.medium
                     )
                     .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -109,12 +108,11 @@ fun HomeScreen(navController: NavHostController) {
             }
         }
 
-        // Botões centralizados
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 32.dp)
-                .padding(top = 180.dp, bottom = 16.dp), // ajusta para ficar abaixo do texto
+                .padding(top = 180.dp, bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -122,30 +120,33 @@ fun HomeScreen(navController: NavHostController) {
                 onClick = { navController.navigate("timer") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8EC6FF)),
                 modifier = Modifier.fillMaxWidth(0.6f)
-            ) { Text("Estudar Agora") }
-
+            ) {
+                Text("Estudar Agora")
+            }
             Spacer(modifier = Modifier.height(16.dp))
-
             Button(
                 onClick = { navController.navigate("notes") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8EC6FF)),
                 modifier = Modifier.fillMaxWidth(0.6f)
-            ) { Text("Bloco de Notas") }
-
+            ) {
+                Text("Bloco de Notas")
+            }
             Spacer(modifier = Modifier.height(16.dp))
-
             Button(
                 onClick = { navController.navigate("profile") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8EC6FF)),
                 modifier = Modifier.fillMaxWidth(0.6f)
-            ) { Text("Perfil") }
+            ) {
+                Text("Perfil")
+            }
         }
     }
 }
 
+
 @Composable
 fun TimerScreen(navController: NavHostController) {
-    val totalTime = 25 * 60 // 25 minutos
+    val totalTime = 25 * 60
     var secondsLeft by remember { mutableStateOf(totalTime) }
     var isRunning by remember { mutableStateOf(false) }
 
@@ -155,7 +156,6 @@ fun TimerScreen(navController: NavHostController) {
         return "%02d:%02d".format(minutes, secs)
     }
 
-    // Contagem regressiva
     LaunchedEffect(isRunning) {
         while (isRunning && secondsLeft > 0) {
             kotlinx.coroutines.delay(1000L)
@@ -169,7 +169,6 @@ fun TimerScreen(navController: NavHostController) {
             .fillMaxSize()
             .padding(24.dp)
     ) {
-        // 🔝 Topo com seta + título
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -189,7 +188,6 @@ fun TimerScreen(navController: NavHostController) {
             )
         }
 
-        // ⏱️ Timer centralizado
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -204,49 +202,44 @@ fun TimerScreen(navController: NavHostController) {
                 Text(
                     text = formatTime(secondsLeft),
                     fontSize = 48.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
             }
-
             Spacer(modifier = Modifier.height(36.dp))
-
-            // 🔴 Botões vermelhos centralizados
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
                     onClick = { isRunning = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
-                ) {
-                    Text("Iniciar", color = Color.White)
-                }
-
+                ) { Text("Iniciar", color = Color.White) }
                 Button(
                     onClick = { isRunning = false },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
-                ) {
-                    Text("Pausar", color = Color.White)
-                }
-
+                ) { Text("Pausar", color = Color.White) }
                 Button(
                     onClick = {
                         isRunning = false
                         secondsLeft = totalTime
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
-                ) {
-                    Text("Reset", color = Color.White)
-                }
+                ) { Text("Reset", color = Color.White) }
             }
         }
     }
 }
 
+
 @Composable
 fun NotesScreen(navController: NavHostController) {
-    var text by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf(listOf<String>()) }
+    val context = LocalContext.current
+    val db: AppDatabase = remember { AppDatabase.getDatabase(context) }
+    val noteDao: NoteDao = db.noteDao()
+
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+
+    val notes by noteDao.getAllNotes().collectAsState(initial = emptyList<Note>())
 
     Column(
         modifier = Modifier
@@ -254,7 +247,7 @@ fun NotesScreen(navController: NavHostController) {
             .background(Color(0xFFE0F7FA))
             .padding(16.dp)
     ) {
-        // 🔙 Seta de voltar
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -271,33 +264,41 @@ fun NotesScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White, shape = MaterialTheme.shapes.medium)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            TextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text("Digite sua nota") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium
-            )
-        }
+
+        TextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Título da nota") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+
+        TextField(
+            value = content,
+            onValueChange = { content = it },
+            label = { Text("Conteúdo da nota") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = {
-                if (text.isNotBlank()) {
-                    notes = notes + text
-                    text = ""
+                if (title.isNotBlank() && content.isNotBlank()) {
+                    scope.launch {
+                        noteDao.insert(Note(title = title, content = content))
+                        title = ""
+                        content = ""
+                    }
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8EC6FF)),
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Salvar") }
+        ) {
+            Text("Salvar Nota")
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -307,20 +308,28 @@ fun NotesScreen(navController: NavHostController) {
         ) {
             items(notes) { note ->
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            scope.launch { noteDao.delete(note) }
+                        },
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(4.dp),
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    Text(
-                        text = note,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(note.title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(note.content, color = Color.DarkGray)
+                    }
                 }
             }
         }
     }
 }
+
+
+
 @Composable
 fun ProfileScreen(navController: NavHostController) {
     var selectedProfile by remember { mutableStateOf("Nina") }
@@ -330,11 +339,7 @@ fun ProfileScreen(navController: NavHostController) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // 🔝 Topo com seta + título
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_arrow_back),
@@ -350,7 +355,6 @@ fun ProfileScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Imagem do avatar
         val imageRes = if (selectedProfile == "Nina") R.drawable.girl else R.drawable.boy
         Box(
             modifier = Modifier
@@ -359,7 +363,7 @@ fun ProfileScreen(navController: NavHostController) {
                 .background(Color.Gray)
                 .border(
                     width = 4.dp,
-                    color = Color(0xFF556B2F), // verde musgo
+                    color = Color(0xFF556B2F),
                     shape = CircleShape
                 )
                 .align(Alignment.CenterHorizontally)
@@ -374,77 +378,30 @@ fun ProfileScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Conteúdo centralizado abaixo da imagem
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Escolha seu avatar:",
-                style = MaterialTheme.typography.titleMedium,
-                fontSize = 22.sp
-            )
-
+            Text("Escolha seu avatar:", fontSize = 22.sp)
             Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(32.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                 Text(
-                    text = "Nina",
+                    "Nina",
                     fontSize = 22.sp,
                     color = if (selectedProfile == "Nina") Color(0xFF556B2F) else Color.Black,
-                    modifier = Modifier
-                        .clickable { selectedProfile = "Nina" }
-                        .padding(16.dp)
+                    modifier = Modifier.clickable { selectedProfile = "Nina" }
                 )
-
                 Text(
-                    text = "Antonio",
+                    "Antonio",
                     fontSize = 22.sp,
                     color = if (selectedProfile == "Antonio") Color(0xFF556B2F) else Color.Black,
-                    modifier = Modifier
-                        .clickable { selectedProfile = "Antonio" }
-                        .padding(16.dp)
+                    modifier = Modifier.clickable { selectedProfile = "Antonio" }
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                "Nome: Usuario",
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                "Meta: Estudar 2h por dia",
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // 🔹 Quadro de Estudos após todas as informações
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Quadro de Estudos",
-                style = MaterialTheme.typography.titleMedium,
-                fontSize = 22.sp
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Image(
-                painter = painterResource(id = R.drawable.quadro_estudos), // substitua pela sua imagem
-                contentDescription = "Quadro de Estudos",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                contentScale = ContentScale.FillWidth // mantém tamanho original se a imagem já estiver no tamanho certo
-            )
+            Text("Nome: Usuário", fontSize = 20.sp)
+            Text("Meta: Estudar 2h por dia", fontSize = 20.sp)
         }
     }
 }
