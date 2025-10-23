@@ -4,9 +4,12 @@ import androidx.room.*
 
 @Dao
 interface UserDao {
-    @Query("SELECT * FROM users WHERE id = 1 LIMIT 1")
-    suspend fun getUser(): User?
+    @Query("SELECT * FROM User WHERE username = :name")
+    suspend fun getUser(name: String): User?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdate(user: User)
+    @Insert
+    suspend fun insert(user: User)
+
+    @Update
+    suspend fun update(user: User)
 }

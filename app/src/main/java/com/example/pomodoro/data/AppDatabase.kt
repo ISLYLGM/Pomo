@@ -5,10 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Note::class, User::class], version = 2)
+@Database(entities = [Note::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
-    abstract fun userDao(): UserDao
 
     companion object {
         @Volatile
@@ -20,7 +19,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "pomodoro_db"
-                ).fallbackToDestructiveMigration().build()
+                )
+                    .fallbackToDestructiveMigration() // ⚠️ força recriar o BD se houver mudanças
+                    .build()
                 INSTANCE = instance
                 instance
             }

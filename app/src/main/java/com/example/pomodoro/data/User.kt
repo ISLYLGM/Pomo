@@ -3,10 +3,8 @@ package com.example.pomodoro.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "users")
+@Entity
 data class User(
-    @PrimaryKey val id: Int = 1,
-    val name: String,
-    val avatar: String,
-    val goal: String
+    @PrimaryKey val username: String,
+    val meta: String
 )
