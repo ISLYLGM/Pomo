@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class NotesViewModel(app: Application) : AndroidViewModel(app) {
     private val noteDao = AppDatabase.getDatabase(app).noteDao()
@@ -16,15 +17,23 @@ class NotesViewModel(app: Application) : AndroidViewModel(app) {
     val notes: Flow<List<Note>> = noteDao.getAllNotes()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addNote(title: String, content: String) {
+    fun addNote(content: String) {
         viewModelScope.launch {
-            noteDao.insert(Note(title = title, content = content))
+            try {
+                noteDao.insert(Note(content = content))
+            } catch (e: Exception) {
+                Log.e("NotesViewModel", "Erro adicionando nota", e)
+            }
         }
     }
 
     fun deleteNote(note: Note) {
         viewModelScope.launch {
-            noteDao.delete(note)
+            try {
+                noteDao.delete(note)
+            } catch (e: Exception) {
+                Log.e("NotesViewModel", "Erro deletando nota", e)
+            }
         }
     }
 }

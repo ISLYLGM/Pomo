@@ -20,7 +20,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "pomodoro_db"
                 )
-                    .fallbackToDestructiveMigration() // ⚠️ força recriar o BD se houver mudanças
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

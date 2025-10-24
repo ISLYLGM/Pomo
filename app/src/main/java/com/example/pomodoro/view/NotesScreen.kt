@@ -8,29 +8,32 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.pomodoro.Nota
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.vectorResource
+import com.example.pomodoro.R
+import com.example.pomodoro.data.Note
+import com.example.pomodoro.viewmodel.NotesViewModel
+import android.util.Log
 
 @Composable
-fun NotesScreen(navController: NavController) {
-    var notas = remember { mutableStateListOf(
-        Nota(1, "Comprar leite"),
-        Nota(2, "Estudar Kotlin"),
-        Nota(3, "Fazer exercício")
-    )}
+fun NotesScreen(
+    navController: NavController,
+    viewModel: NotesViewModel = viewModel()
+) {
 
+    val notesList by viewModel.notes.collectAsState(initial = emptyList())
     var novaNota by remember { mutableStateOf(TextFieldValue("")) }
 
     Column(
@@ -39,7 +42,33 @@ fun NotesScreen(navController: NavController) {
             .background(Color(0xFFEFEFEF))
             .padding(16.dp)
     ) {
-        // Input para nova nota
+
+        // Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrow_back),
+                    contentDescription = "Voltar",
+                    tint = Color.Black
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            BasicText(
+                text = "Minhas Notas",
+                style = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Campo para nova nota
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -62,9 +91,12 @@ fun NotesScreen(navController: NavController) {
                     .padding(12.dp)
                     .clickable {
                         if (novaNota.text.isNotBlank()) {
-                            val id = if (notas.isEmpty()) 1 else notas.maxOf { it.id } + 1
-                            notas.add(Nota(id, novaNota.text))
-                            novaNota = TextFieldValue("")
+                            try {
+                                viewModel.addNote(novaNota.text)
+                                novaNota = TextFieldValue("")
+                            } catch (e: Exception) {
+                                Log.e("NotesScreen", "Erro adicionando nota", e)
+                            }
                         }
                     },
                 contentAlignment = Alignment.Center
@@ -84,11 +116,17 @@ fun NotesScreen(navController: NavController) {
 
         // Lista de notas
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(notas) { nota ->
-                NotaItem(
-                    nota = nota,
-                    onDelete = { notas.remove(nota) },
-                    onUpdate = { nova -> nota.texto = nova }
+            items(notesList) { note ->
+                NoteItem(
+                    note = note,
+                    onDelete = { viewModel.deleteNote(note) },
+                    onUpdate = { newContent ->
+                        try {
+                            viewModel.addNote(newContent)
+                        } catch (e: Exception) {
+                            Log.e("NotesScreen", "Erro atualizando nota", e)
+                        }
+                    }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -97,9 +135,10 @@ fun NotesScreen(navController: NavController) {
 }
 
 @Composable
-fun NotaItem(nota: Nota, onDelete: () -> Unit, onUpdate: (String) -> Unit) {
+fun NoteItem(note: Note, onDelete: () -> Unit, onUpdate: (String) -> Unit) {
+
     var editando by remember { mutableStateOf(false) }
-    var textoEditado by remember { mutableStateOf(TextFieldValue(nota.texto)) }
+    var textoEditado by remember { mutableStateOf(TextFieldValue(note.content)) }
 
     Row(
         modifier = Modifier
@@ -117,7 +156,7 @@ fun NotaItem(nota: Nota, onDelete: () -> Unit, onUpdate: (String) -> Unit) {
             )
         } else {
             BasicText(
-                text = nota.texto,
+                text = note.content,
                 style = TextStyle(fontSize = 16.sp),
                 modifier = Modifier.weight(1f)
             )
@@ -125,7 +164,7 @@ fun NotaItem(nota: Nota, onDelete: () -> Unit, onUpdate: (String) -> Unit) {
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Botão Editar / Salvar
+        // Botão editar/salvar
         BasicText(
             text = if (editando) "✅" else "✏️",
             modifier = Modifier
@@ -136,6 +175,7 @@ fun NotaItem(nota: Nota, onDelete: () -> Unit, onUpdate: (String) -> Unit) {
                             editando = false
                         }
                     } else {
+                        textoEditado = TextFieldValue(note.content)
                         editando = true
                     }
                 }
@@ -143,7 +183,7 @@ fun NotaItem(nota: Nota, onDelete: () -> Unit, onUpdate: (String) -> Unit) {
             style = TextStyle(fontSize = 20.sp)
         )
 
-        // Botão Excluir
+        // Botão deletar
         BasicText(
             text = "🗑️",
             modifier = Modifier
@@ -153,4 +193,3 @@ fun NotaItem(nota: Nota, onDelete: () -> Unit, onUpdate: (String) -> Unit) {
         )
     }
 }
-
